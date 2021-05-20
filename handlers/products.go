@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,18 +33,11 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 	p.log.Println("Handle POST product")
 
-	product := &data.Product{}
-	error := product.FromJSON(r.Body)
-
-	if error != nil {
-		http.Error(rw, "Unable to create product from passed JSON", http.StatusBadRequest)
-		return
-	}
-
-	data.AddProduct(product)
+	product := r.Context().Value(KeyProduct{}).(data.Product)
+	data.AddProduct(&product)
 }
 
-func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
+func (p Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	id, err := strconv.Atoi(vars["id"])
@@ -55,15 +49,9 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 
 	p.log.Println("Handle PUT product", id)
 
-	product := &data.Product{}
-	err = product.FromJSON(r.Body)
+	product := r.Context().Value(KeyProduct{}).(data.Product)
 
-	if err != nil {
-		http.Error(rw, "Unable to create product from passed JSON", http.StatusBadRequest)
-		return
-	}
-
-	err = data.UpdateProduct(id, product)
+	err = data.UpdateProduct(id, &product)
 	if err == data.ErrProductNotFound {
 		http.Error(rw, "Product Not Found", http.StatusNotFound)
 		return
@@ -73,4 +61,24 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
 		return
 	}
+}
+
+type KeyProduct struct{}
+
+func (p Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		product := data.Product{}
+		error := product.FromJSON(r.Body)
+
+		if error != nil {
+			http.Error(rw, "Unable to create product from passed JSON", http.StatusBadRequest)
+			return
+		}
+
+		context := context.WithValue(r.Context(), KeyProduct{}, product)
+		req := r.WithContext(context)
+
+		next.ServeHTTP(rw, req)
+	})
+
 }
