@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -24,6 +25,7 @@ func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	productList := data.GetProducts()
 	error := productList.ToJSON(rw)
 	if error != nil {
+		p.log.Println("Unable to pasre product JSON", error)
 		http.Error(rw, "Unable to pasre product JSON", http.StatusInternalServerError)
 		return
 	}
@@ -43,6 +45,7 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 
 	if err != nil {
+		p.log.Println("Unable to convert ID", err)
 		http.Error(rw, "Unable to convert ID", http.StatusBadRequest)
 		return
 	}
@@ -53,11 +56,13 @@ func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
 
 	err = data.UpdateProduct(id, &product)
 	if err == data.ErrProductNotFound {
+		p.log.Println("Product Not Found", err)
 		http.Error(rw, "Product Not Found", http.StatusNotFound)
 		return
 	}
 
 	if err != nil {
+		p.log.Println("Product Not Found", err)
 		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
 		return
 	}
@@ -71,7 +76,20 @@ func (p Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 		error := product.FromJSON(r.Body)
 
 		if error != nil {
+			p.log.Println("Unable to create product from passed JSON", error)
 			http.Error(rw, "Unable to create product from passed JSON", http.StatusBadRequest)
+			return
+		}
+
+		// validate the product
+		error = product.Validator()
+		if error != nil {
+			p.log.Println("Unable to validate product", error)
+			http.Error(
+				rw,
+				fmt.Sprintf("Unable to validate product: %s", error),
+				http.StatusBadRequest,
+			)
 			return
 		}
 
