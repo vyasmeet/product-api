@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"time"
+
+	"github.com/go-playground/validator"
 )
 
 type Product struct {
 	ID          int     `json:"id"`
-	Name        string  `json:"name"`
+	Name        string  `json:"name" validate:"required"`
 	Description string  `json:"description"`
 	Price       float32 `json:"price"`
 	SKU         string  `json:"sku"`
@@ -21,6 +23,11 @@ type Product struct {
 type Products []*Product
 
 var ErrProductNotFound = fmt.Errorf("Product Not Found")
+
+func (p *Product) Validator() error {
+	validate := validator.New()
+	return validate.Struct(p)
+}
 
 func (p *Products) ToJSON(w io.Writer) error {
 	encoder := json.NewEncoder(w)
