@@ -6,10 +6,12 @@ import (
 	"github.com/vyasmeet/product-api/data"
 )
 
-//	swagger:route GET /products products listProducts
-//	Returns a list of products
-//	responses:
+// swagger:route GET /products products listProducts
+// Return a list of products from the database
+// responses:
 //	200: productsResponse
+
+// Lists all products
 func (p *Products) ListAll(rw http.ResponseWriter, r *http.Request) {
 	p.log.Println("[DEBUG] get all records")
 	products := data.GetProducts()
@@ -20,6 +22,13 @@ func (p *Products) ListAll(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// swagger:route GET /products/{id} products listSingle
+// Return a list of products from the database
+// responses:
+//	200: productResponse
+//	404: errorResponse
+
+// ListSingle handles GET requests
 func (p *Products) ListSingle(rw http.ResponseWriter, r *http.Request) {
 	id := getProductID(r)
 

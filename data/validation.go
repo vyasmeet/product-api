@@ -7,6 +7,7 @@ import (
 	"github.com/go-playground/validator"
 )
 
+//	ValidationError wraps the validator FieldError so we don't expose this out
 type ValidationError struct {
 	validator.FieldError
 }
@@ -33,7 +34,7 @@ func (v ValidationErrors) Errors() []string {
 	return errs
 }
 
-// Validation contains
+// Validation
 type Validation struct {
 	validate *validator.Validate
 }

@@ -3,12 +3,15 @@ consumes:
 - application/json
 definitions:
   Product:
+    description: Product defines structure of API product
     properties:
       description:
         type: string
         x-go-name: Description
       id:
+        description: the id for the product
         format: int64
+        minimum: 1
         type: integer
         x-go-name: ID
       name:
@@ -31,22 +34,24 @@ info:
 paths:
   /products:
     get:
-      description: Returns a list of products
-      operationId: listProducts
+      description: Return a list of products from the database
+      operationId: productsResponse
       responses:
         "200":
           $ref: '#/responses/productsResponse'
       tags:
       - products
+  /products/{id}:
+    delete:
+      description: Update a products details
+      operationId: deleteProduct
+      responses:
+        "201":
+          $ref: '#/responses/noContentResponse'
+      tags:
+      - products
 produces:
 - application/json
-responses:
-  productsResponse:
-    description: A list of products returns in the response
-    schema:
-      items:
-        $ref: '#/definitions/Product'
-      type: array
 schemes:
 - http
 swagger: "2.0"
