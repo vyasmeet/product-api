@@ -7,7 +7,7 @@ import (
 )
 
 func (p *Products) Update(rw http.ResponseWriter, r *http.Request) {
-	prod := r.Context().Value(KeyProduct{}).(data.Product)
+	prod := r.Context().Value(KeyProduct{}).(*data.Product)
 	p.log.Println("[DEBUG] updating record id", prod.ID)
 
 	err := data.UpdateProduct(prod)

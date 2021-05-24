@@ -31,18 +31,18 @@ func GetProductsByID(id int) (*Product, error) {
 	return productList[i], nil
 }
 
-func AddProduct(p Product) {
+func AddProduct(p *Product) {
 	maxID := productList[len(productList)-1].ID
 	p.ID = maxID + 1
-	productList = append(productList, &p)
+	productList = append(productList, p)
 }
 
-func UpdateProduct(p Product) error {
+func UpdateProduct(p *Product) error {
 	i := findIndexByProductID(p.ID)
 	if i == -1 {
 		return ErrProductNotFound
 	}
-	productList[i] = &p
+	productList[i] = p
 	return nil
 }
 
