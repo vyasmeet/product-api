@@ -16,7 +16,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,92 +25,42 @@ import (
 	"github.com/vyasmeet/product-api/data"
 )
 
+type KeyProduct struct{}
+
+// A list of products returns in the response
+//	swagger:response productsResponse
+type productsResponseWrapper struct {
+	//	All products in the system
+	//	in: body
+	Body []data.Product
+}
+
+// Products is http handler
 type Products struct {
 	log *log.Logger
+	v   *data.Validation
 }
 
-func NewProducts(log *log.Logger) *Products {
-	return &Products{log}
+func NewProducts(log *log.Logger, v *data.Validation) *Products {
+	return &Products{log, v}
 }
 
-// handle GET request - Returns list of products
-func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
-	p.log.Println("Handle GET products")
-	productList := data.GetProducts()
-	error := productList.ToJSON(rw)
-	if error != nil {
-		p.log.Println("Unable to pasre product JSON", error)
-		http.Error(rw, "Unable to pasre product JSON", http.StatusInternalServerError)
-		return
-	}
+var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")
+
+type GenericError struct {
+	Message string `json:"message"`
 }
 
-// handle POST request - Add new product
-func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
-	p.log.Println("Handle POST product")
-
-	product := r.Context().Value(KeyProduct{}).(data.Product)
-	data.AddProduct(&product)
+type ValidationError struct {
+	Messages []string `json:"messages"`
 }
 
-func (p *Products) UpdateProducts(rw http.ResponseWriter, r *http.Request) {
+func getProductID(r *http.Request) int {
 	vars := mux.Vars(r)
 
 	id, err := strconv.Atoi(vars["id"])
-
 	if err != nil {
-		p.log.Println("Unable to convert ID", err)
-		http.Error(rw, "Unable to convert ID", http.StatusBadRequest)
-		return
+		panic(err)
 	}
-
-	p.log.Println("Handle PUT product", id)
-
-	product := r.Context().Value(KeyProduct{}).(data.Product)
-
-	err = data.UpdateProduct(id, &product)
-	if err == data.ErrProductNotFound {
-		p.log.Println("Product Not Found", err)
-		http.Error(rw, "Product Not Found", http.StatusNotFound)
-		return
-	}
-
-	if err != nil {
-		p.log.Println("Product Not Found", err)
-		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
-		return
-	}
-}
-
-type KeyProduct struct{}
-
-func (p Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		product := data.Product{}
-		error := product.FromJSON(r.Body)
-
-		if error != nil {
-			p.log.Println("Unable to create product from passed JSON", error)
-			http.Error(rw, "Unable to create product from passed JSON", http.StatusBadRequest)
-			return
-		}
-
-		// validate the product
-		error = product.Validator()
-		if error != nil {
-			p.log.Println("Unable to validate product", error)
-			http.Error(
-				rw,
-				fmt.Sprintf("Unable to validate product: %s", error),
-				http.StatusBadRequest,
-			)
-			return
-		}
-
-		context := context.WithValue(r.Context(), KeyProduct{}, product)
-		req := r.WithContext(context)
-
-		next.ServeHTTP(rw, req)
-	})
-
+	return id
 }

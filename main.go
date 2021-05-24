@@ -9,30 +9,33 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/vyasmeet/product-api/data"
 	"github.com/vyasmeet/product-api/handlers"
 )
 
 func main() {
 
 	log := log.New(os.Stdout, "vyasmeet/product-api/", log.LstdFlags)
+	v := data.NewValidation()
 
-	productHandler := handlers.NewProducts(log)
+	productHandler := handlers.NewProducts(log, v)
 
 	serveMux := mux.NewRouter()
 
 	// GET subRouter
 	getRouter := serveMux.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", productHandler.GetProducts)
+	getRouter.HandleFunc("/products", productHandler.ListAll)
+	getRouter.HandleFunc("/products/{id:[0-9]+}", productHandler.ListSingle)
 
 	// POST subrouter
-	postRouter := serveMux.Methods(http.MethodPost).Subrouter()
-	postRouter.HandleFunc("/", productHandler.AddProduct)
-	postRouter.Use(productHandler.MiddlewareValidateProduct)
+	// postRouter := serveMux.Methods(http.MethodPost).Subrouter()
+	// postRouter.HandleFunc("/", productHandler.AddProduct)
+	// postRouter.Use(productHandler.MiddlewareValidateProduct)
 
-	// PUT subrouter
-	putRouter := serveMux.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", productHandler.UpdateProducts)
-	putRouter.Use(productHandler.MiddlewareValidateProduct)
+	// // PUT subrouter
+	// putRouter := serveMux.Methods(http.MethodPut).Subrouter()
+	// putRouter.HandleFunc("/{id:[0-9]+}", productHandler.UpdateProducts)
+	// putRouter.Use(productHandler.MiddlewareValidateProduct)
 
 	server := &http.Server{
 		Addr:         ":9090",
