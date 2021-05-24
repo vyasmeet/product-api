@@ -13,15 +13,17 @@ type ValidationError struct {
 
 func (v ValidationError) Error() string {
 	return fmt.Sprintf(
-		"Key: '%s' Error:  Field validation for '%s' falied on the '%s' tag",
+		"Key: '%s' Error: Field validation for '%s' failed on the '%s' tag",
 		v.Namespace(),
 		v.Field(),
 		v.Tag(),
 	)
 }
 
+// ValidationErrors is a collection of ValidationError
 type ValidationErrors []ValidationError
 
+// Errors converts the slice into a string slice
 func (v ValidationErrors) Errors() []string {
 	errs := []string{}
 	for _, err := range v {
@@ -31,33 +33,40 @@ func (v ValidationErrors) Errors() []string {
 	return errs
 }
 
+// Validation contains
 type Validation struct {
 	validate *validator.Validate
 }
 
+// NewValidation creates a new Validation type
 func NewValidation() *Validation {
 	validate := validator.New()
-	validate.RegisterValidation("sku", validateSKU)
+	validate.RegisterValidation("sku", validateTheSKU)
+
 	return &Validation{validate}
 }
 
 func (v *Validation) Validate(i interface{}) ValidationErrors {
 	errs := v.validate.Struct(i).(validator.ValidationErrors)
+
 	if len(errs) == 0 {
 		return nil
 	}
+
 	var returnErrs []ValidationError
 	for _, err := range errs {
 		ve := ValidationError{err.(validator.FieldError)}
 		returnErrs = append(returnErrs, ve)
 	}
+
 	return returnErrs
 }
 
-func validateSKU(fl validator.FieldLevel) bool {
-	// sku format is abc-deav-afsdf
-	regex := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
-	matches := regex.FindAllString(fl.Field().String(), -1)
+// validateSKU
+func validateTheSKU(fl validator.FieldLevel) bool {
+	// SKU must be in the format abc-abc-abc
+	re := regexp.MustCompile(`[a-z]+-[a-z]+-[a-z]+`)
+	sku := re.FindAllString(fl.Field().String(), -1)
 
-	return len(matches) == 1
+	return len(sku) == 1
 }

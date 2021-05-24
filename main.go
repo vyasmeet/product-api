@@ -28,14 +28,18 @@ func main() {
 	getRouter.HandleFunc("/products/{id:[0-9]+}", productHandler.ListSingle)
 
 	// POST subrouter
-	// postRouter := serveMux.Methods(http.MethodPost).Subrouter()
-	// postRouter.HandleFunc("/", productHandler.AddProduct)
-	// postRouter.Use(productHandler.MiddlewareValidateProduct)
+	postRouter := serveMux.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/products", productHandler.Create)
+	postRouter.Use(productHandler.MiddlewareValidateProduct)
 
 	// // PUT subrouter
-	// putRouter := serveMux.Methods(http.MethodPut).Subrouter()
-	// putRouter.HandleFunc("/{id:[0-9]+}", productHandler.UpdateProducts)
-	// putRouter.Use(productHandler.MiddlewareValidateProduct)
+	putRouter := serveMux.Methods(http.MethodPut).Subrouter()
+	putRouter.HandleFunc("/products/{id:[0-9]+}", productHandler.Update)
+	putRouter.Use(productHandler.MiddlewareValidateProduct)
+
+	// DELETE subRouter
+	deleteRouter := serveMux.Methods(http.MethodDelete).Subrouter()
+	deleteRouter.HandleFunc("/products/{id:[0-9]+}", productHandler.Delete)
 
 	server := &http.Server{
 		Addr:         ":9090",

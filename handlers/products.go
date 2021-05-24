@@ -45,7 +45,7 @@ func NewProducts(log *log.Logger, v *data.Validation) *Products {
 	return &Products{log, v}
 }
 
-var ErrInvalidProductPath = fmt.Errorf("Invalid Path, path should be /products/[id]")
+var ErrInvalidProductPath = fmt.Errorf("invalid Path, path should be /products/[id]")
 
 type GenericError struct {
 	Message string `json:"message"`
