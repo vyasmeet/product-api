@@ -13,6 +13,7 @@ import (
 
 // Lists all products
 func (p *Products) ListAll(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Add("Content-Type", "application/json")
 	p.log.Println("[DEBUG] get all records")
 	products := data.GetProducts()
 
@@ -30,6 +31,7 @@ func (p *Products) ListAll(rw http.ResponseWriter, r *http.Request) {
 
 // ListSingle handles GET requests
 func (p *Products) ListSingle(rw http.ResponseWriter, r *http.Request) {
+	rw.Header().Add("Content-Type", "application/json")
 	id := getProductID(r)
 
 	p.log.Println("[DEBUG] get record id", id)
