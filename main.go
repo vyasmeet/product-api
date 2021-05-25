@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
+	gorillahandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/vyasmeet/product-api/data"
 	"github.com/vyasmeet/product-api/handlers"
@@ -48,12 +49,16 @@ func main() {
 	getRouter.Handle("/docs", docHandler)
 	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
 
+	//	Applying CORS to toplevel route
+	corsHandler := gorillahandlers.CORS(gorillahandlers.AllowedOrigins([]string{"*"}))
+
 	server := &http.Server{
-		Addr:         ":9090",
-		Handler:      serveMux,
-		IdleTimeout:  120 * time.Second,
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		Addr:         ":9090",               // Configuring bind address
+		Handler:      corsHandler(serveMux), // Setting default handler
+		ErrorLog:     log,                   // Setting error log for server
+		IdleTimeout:  120 * time.Second,     // Max Idle timeout
+		ReadTimeout:  1 * time.Second,       // Max Read timeout
+		WriteTimeout: 1 * time.Second,       // Max Write timeout
 	}
 
 	go func() {
